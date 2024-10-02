@@ -17,12 +17,6 @@ const Car = mongoose.model('Car', new mongoose.Schema({
     year: Number
 }));
 
-const cars = [
-    {registrationNumber: 'ABC123', make: 'Volvo', model: 'XC60', year: 2018},
-    {registrationNumber: 'DEF456', make: 'Toyota', model: 'Corolla', year: 2020}
-]
-
-
 app.get('/', (req, res) => {
     res.render('index', {title: 'Welcome to the Car Workshop API!'});
 });
