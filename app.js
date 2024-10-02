@@ -27,6 +27,11 @@ app.get('/cars', async (req,res) => {
     res.render('cars', { cars })
 });
 
+app.post('/cars', async (req,res) => {
+    await Car.create(req.body);
+    res.redirect('/cars');
+});
+
 app.get('/cars/:registrationNumber', async (req,res) => {
     const car = await Car.findOne({ registrationNumber: req.params.registrationNumber });
 
