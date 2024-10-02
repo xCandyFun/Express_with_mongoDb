@@ -2,8 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 
+app.set('view engine', 'ejs');
+
+app.use(express.urlencoded({ extended: true }));
+
 mongoose.connect('mongodb://localhost:27017/carworkshop')
-.then(()=> console.log('Connected to MongoDB'))
+.then(()=> console.log('Connected to MongoDB on port 27017'))
 .catch(err => console.error('Connect error', err));
 
 const Car = mongoose.model('Car', new mongoose.Schema({
@@ -20,20 +24,20 @@ const cars = [
 
 
 app.get('/', (req, res) => {
-    res.send('Welcome to the Car Workshop API!');
+    res.render('index', {title: 'Welcome to the Car Workshop API!'});
 });
 
 app.get('/cars', async (req,res) => {
 
     const cars = await Car.find();
-    res.json(cars);
+    res.render('cars', { cars })
 });
 
 app.get('/cars/:registrationNumber', async (req,res) => {
     const car = await Car.findOne({ registrationNumber: req.params.registrationNumber });
 
     if (car) {
-    res.json(car)
+        res.render('carDetails', { car })
     }else {
         res.status(404).send('Car not found')
     }

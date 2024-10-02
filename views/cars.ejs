@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Cars</title>
+  </head>
+  <body>
+    <h1>All Cars</h1>
+
+    <h2>Add a New Car</h2>
+    <form action="/cars" method="POST">
+
+      <label for="registrationNumber">Registration Number:</label>
+      <input type="text" id="registrationNumber" name="registrationNumber" required>
+      
+      <label for="make">Make:</label>
+      <input type="text" id="make" name="make" required>
+      
+      <label for="model">Model:</label>
+      <input type="text" id="model" name="model" required>
+      
+      <label for="year">Year:</label>
+      <input type="number" id="year" name="year" required>
+
+      <button type="submit">Add Car</button>
+    </form>
+
+    <h2>Car List</h2>
+    <ul>
+        <% cars.forEach(car => { %>
+            <li>
+                <strong><%= car.registrationNumber %> </strong> - <%= car.make %> <%= car.model %> (Year: <%= car.year %>)
+                <a href="/cars/<%= car.registrationNumber %>">View Details</a>
+            </li>
+        <% }) %>
+    </ul>
+    <a href="/">Back to Home</a>
+  </body>
+</html>
