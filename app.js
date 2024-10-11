@@ -1,16 +1,11 @@
+const { DynamoDBClient, ScanCommand, PutItemCommand, GetItemCommand } = require('@aws-sdk/client-dynamodb');
 const express = require('express');
-const AWS = require('aws-sdk');
 const app = express();
 
-AWS.config.update({
-    region: 'eu-north-1'
-});
-
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const tableName = 'CarWorkshop'
+const dynamoDB = new DynamoDBClient({ region: 'eu-north-1'});
+const tableName = 'Cars'
 
 app.set('view engine', 'ejs');
-
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
@@ -19,21 +14,29 @@ app.get('/', (req, res) => {
 
 app.get('/cars', async (req,res) => {
     try {
-        const { Item: cars } = await dynamoDB.scan({ TableName: tableName }).promise();
-        res.render('cars', { cars });
+        const data = await dynamoDB.send(new ScanCommand({ TableName: tableName}));
+        res.render('cars', { cars: data.Items });
     }catch {
+        console.log('Error fetching cats:', error)
         res.status(500).send('Error fetching cars');
     }
 });
 
 app.post('/cars', async (req,res) => {
     try {
-        await dynamoDB.put({
+        const params = {
             TableName: tableName,
-            Item: { ...req.body, year: + req.body.year }
-        }).promise();
+            Item:{
+                registrationNumber: { S: req.body.registrationNumber },
+                make: { S: req.body.make },
+                model: { S: req.body.model },
+                year: { N: req.body.year.toString() }
+            }
+        };
+        await dynamoDB.send(new PutItemCommand(params));
         res.redirect('/cars');
-    } catch{
+    } catch (error) {
+        console.log('Error adding car:', error);
         res.status(500).send('Error adding car');
     }
 });
