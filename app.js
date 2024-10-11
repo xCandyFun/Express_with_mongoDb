@@ -1,45 +1,51 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const AWS = require('aws-sdk');
 const app = express();
+
+AWS.config.update({
+    region: 'eu-north-1'
+});
+
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const tableName = 'CarWorkshop'
 
 app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
-
-mongoose.connect('mongodb://localhost:27017/carworkshop')
-.then(()=> console.log('Connected to MongoDB on port 27017'))
-.catch(err => console.error('Connect error', err));
-
-const Car = mongoose.model('Car', new mongoose.Schema({
-    registrationNumber: String,
-    make: String,
-    model: String,
-    year: Number
-}));
 
 app.get('/', (req, res) => {
     res.render('index', {title: 'Welcome to the Car Workshop API!'});
 });
 
 app.get('/cars', async (req,res) => {
-
-    const cars = await Car.find();
-    res.render('cars', { cars })
+    try {
+        const { Item: cars } = await dynamoDB.scan({ TableName: tableName }).promise();
+        res.render('cars', { cars });
+    }catch {
+        res.status(500).send('Error fetching cars');
+    }
 });
 
 app.post('/cars', async (req,res) => {
-    await Car.create(req.body);
-    res.redirect('/cars');
+    try {
+        await dynamoDB.put({
+            TableName: tableName,
+            Item: { ...req.body, year: + req.body.year }
+        }).promise();
+        res.redirect('/cars');
+    } catch{
+        res.status(500).send('Error adding car');
+    }
 });
 
 app.get('/cars/:registrationNumber', async (req,res) => {
-    const car = await Car.findOne({ registrationNumber: req.params.registrationNumber });
-
-    if (car) {
-        res.render('carDetails', { car })
-    }else {
-        res.status(404).send('Car not found')
+    try {
+        const { Item: car } = await dynamoDB.get({ TableName: tableName, Key: { registrationNumber } }).promise();
+        car ? res.render('carDetails', {car}) : res.status(404).send('Car not found');
+    } catch {
+        res.status(500).send('Error fetching car');
     }
+    
 });
 
 app.listen(3000, () => {
