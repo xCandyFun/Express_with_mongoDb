@@ -15,7 +15,15 @@ app.get('/', (req, res) => {
 app.get('/cars', async (req,res) => {
     try {
         const data = await dynamoDB.send(new ScanCommand({ TableName: tableName}));
-        res.render('cars', { cars: data.Items });
+
+        const cars = data.Items.map(car => ({
+            registrationNumber: car.registrationNumber.S,
+            make: car.make.S,
+            model: car.model.S,
+            year: car.year.N
+        }));
+
+        res.render('cars', { cars: cars });
     }catch {
         console.log('Error fetching cats:', error)
         res.status(500).send('Error fetching cars');
